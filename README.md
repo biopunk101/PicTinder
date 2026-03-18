@@ -4,9 +4,16 @@
 
 一個使用 Python 與 Tkinter 開發的快速圖片整理工具。透過類似 Tinder 的「左滑刪除、右滑保留」直覺操作，讓你輕鬆清理硬碟中成千上萬的照片！
 
-## 📥 懶人下載 (Mac 專用)
+## 📸 畫面預覽 (Screenshots)
 
-如果您不想安裝 Python，可以直接到 **[Releases](https://github.com/biopunk101/PicTinder/releases)** 頁面下載打包好的 `PicTinder_Mac.zip`。解壓縮後即可直接點擊執行！
+![Demo 1](demo1.png)
+![Demo 2](demo2.png)
+
+## 📥 懶人下載 (免安裝版)
+
+如果您不想安裝 Python，可以直接到 **Releases** 頁面下載打包好的執行檔。解壓縮後即可直接點擊執行！
+- **Mac 使用者**：下載 `PicTinder_Mac.zip`
+- **Windows 使用者**：下載對應的 Windows 版本（如 `.exe` 或 `.zip`）
 
 ## ✨ 功能特色
 
