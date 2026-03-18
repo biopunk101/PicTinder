@@ -6,8 +6,8 @@
 
 ## 📸 畫面預覽 (Screenshots)
 
-![Demo 1](demo1.png)
-![Demo 2](demo2.png)
+![Demo 1](demo1.jpeg)
+![Demo 2](demo2.jpeg)
 
 ## 📥 懶人下載 (免安裝版)
 
