@@ -2,3 +2,6 @@
 __pycache__/
 *.pyc
 .pictinder_config.json
+build/
+dist/
+*.spec
