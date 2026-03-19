@@ -2,6 +2,8 @@ import os
 import sys
 import json
 
+__version__ = "1.1.0"
+
 print("啟動中：正在檢查/載入必備模組...")
 try:
     import tkinter as tk
@@ -26,7 +28,7 @@ except ImportError:
 class PicTinderApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("🔥 PicTinder")
+        self.root.title(f"🔥 PicTinder v{__version__}")
         self.root.geometry("900x700")
 
         self.image_list = []
@@ -34,6 +36,7 @@ class PicTinderApp:
         self.history = []
         self.trash_queue = []
         self.is_processing = False
+        self.last_rename_name = ""
 
         self.config_file = os.path.expanduser("~/.pictinder_config.json")
         self.progress = {}
@@ -47,6 +50,10 @@ class PicTinderApp:
         self.btn_select = tk.Button(
             self.top_frame, text="選擇資料夾 (Step 0)", command=self.select_folder, font=("Arial", 12))
         self.btn_select.pack(side=tk.LEFT)
+
+        self.btn_reset = tk.Button(
+            self.top_frame, text="🔄 重置進度", command=self.reset_progress, font=("Arial", 12))
+        self.btn_reset.pack(side=tk.LEFT, padx=10)
 
         self.btn_exit = tk.Button(
             self.top_frame, text="🚪 完成並離開", command=self.on_closing, font=("Arial", 12))
@@ -138,6 +145,21 @@ class PicTinderApp:
         except Exception as e:
             print(f"儲存設定檔發生錯誤: {e}")
 
+    def reset_progress(self):
+        if messagebox.askyesno("確認重置", "確定要清除所有資料夾的整理進度嗎？\n\n(這將會刪除隱藏的設定檔，一切從頭開始，但不會刪除您的實體圖片)"):
+            self.progress = {}
+            self.last_folder = ""
+            try:
+                if os.path.exists(self.config_file):
+                    os.remove(self.config_file)
+                messagebox.showinfo("成功", "所有進度已重置！")
+                # 如果當前有載入圖片，將畫面切回第一張
+                if self.image_list:
+                    self.current_index = 0
+                    self.show_image()
+            except Exception as e:
+                messagebox.showerror("錯誤", f"無法刪除設定檔: {e}")
+
     def select_folder(self):
         kwargs = {}
         if self.last_folder and os.path.exists(self.last_folder):
@@ -172,6 +194,19 @@ class PicTinderApp:
                         self.current_index = i  # 如果上次那張被刪掉了，就從字母順序大於它的第一張開始
                         break
 
+                # 詢問使用者要繼續還是從頭開始
+                if self.current_index >= len(self.image_list):
+                    prompt = "此資料夾的圖片已全數整理完畢。\n\n要從頭重新整理嗎？"
+                else:
+                    prompt = f"此資料夾已整理至第 {self.current_index}/{len(self.image_list)} 張。\n\n要從上次中斷處繼續(No)，還是從頭開始(Yes)？"
+
+                restart = messagebox.askyesno(
+                    "找到整理進度", prompt, default=messagebox.NO)
+                if restart:
+                    self.current_index = 0
+                    del self.progress[folder_path]
+                    self.save_config()
+
             self.show_image()
 
     def show_image(self):
@@ -201,7 +236,9 @@ class PicTinderApp:
 
             except Exception as e:
                 print(f"讀取圖片發生錯誤 {img_path}: {e}")
-                self.keep_image()  # 如果圖片損毀，自動跳到下一張
+                filename = os.path.basename(img_path)
+                self.lbl_status.config(text=f"⚠️ 無法讀取圖片，自動跳過: {filename}")
+                self.root.after(800, self.keep_image)  # 顯示警告 800 毫秒後跳過
         else:
             self.lbl_image.config(image='')
             self.lbl_status.config(text="🎉 所有圖片已整理完畢！")
@@ -265,9 +302,17 @@ class PicTinderApp:
 
         # 彈出對話框讓使用者輸入新檔名
         new_name = simpledialog.askstring(
-            "重新命名", f"請輸入新的檔案名稱 (不含副檔名 {ext})：", initialvalue=name, parent=self.root)
+            "重新命名", f"請輸入新的檔案名稱 (不含副檔名 {ext})：",
+            initialvalue=self.last_rename_name or name, parent=self.root)
 
         if new_name and new_name != name:
+            # 拒絕包含路徑分隔符的檔名，防止意外移動到其他目錄
+            if os.sep in new_name or ('/' in new_name) or ('\\' in new_name):
+                messagebox.showerror("錯誤", "檔名不可包含路徑分隔符 (/ 或 \\)！")
+                return
+            new_name = new_name.strip()
+            if not new_name:
+                return
             new_filename = new_name + ext
             new_path = os.path.join(folder_path, new_filename)
 
@@ -277,6 +322,7 @@ class PicTinderApp:
 
             try:
                 os.rename(current_path, new_path)
+                self.last_rename_name = new_name
                 # 更新內部清單，避免後續操作出錯
                 self.image_list[self.current_index] = new_path
                 self.show_image()  # 刷新狀態列顯示的新檔名
@@ -302,6 +348,7 @@ class PicTinderApp:
         self.hide_overlay()
         self.update_trash_count()
         self.show_image()
+        self.save_config()
         self.is_processing = False
 
     def delete_image(self, event=None):
@@ -321,7 +368,9 @@ class PicTinderApp:
         self.progress[self.last_folder] = os.path.basename(img_path)
 
         self.hide_overlay()
+        self.update_trash_count()
         self.show_image()
+        self.save_config()
         self.is_processing = False
 
     def undo_action(self, event=None):

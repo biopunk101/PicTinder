@@ -14,6 +14,16 @@ A fast photo organization tool developed with Python and Tkinter. Easily clean u
 - **One-click Rename**: Press `Enter` at any time while browsing to rename the current photo.
 - **Auto-rotation**: Reads EXIF data to automatically rotate vertical photos taken by mobile phones.
 
+## 📝 Changelog
+
+### v1.1.0 (2026-03-19)
+- **Added "Reset Progress" Feature**: A new "🔄 Reset Progress" button allows clearing all saved sorting progress.
+- **Enhanced Rename**: The rename function now remembers the last-used name and validates input to prevent invalid filenames.
+- **Improved Progress Saving**: The app now asks whether to resume from the last session or start over when opening a folder.
+- **Optimized Error Handling**: Now displays a warning and automatically skips corrupted or unreadable images.
+- **More Robust Saving**: Progress is now saved after every keep/delete action.
+- **UI Update**: The application title now displays the version number.
+
 ## 🛠️ System Requirements & Installation
 
 This program is developed in Python. Please make sure you have Python 3.x installed on your system.
